@@ -74,7 +74,7 @@ end)
 
 geo.event.qr_scan(function(event)
     local player_id = event.player_id
-	local place = myPlaces.find(event.via_id)
+	local place = myPlaces:find(event.via_id)
 	
 	if place ~= nil then
 		table.insert(myPlayers[player_id].found, event.via_id)
