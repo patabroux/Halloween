@@ -79,11 +79,11 @@ geo.event.qr_scan(function(event)
 	if place ~= nil then
 		table.insert(myPlayers[player_id].found, event.via_id)
 		geo.ui.clear()
-		geo.ui.append(player_id, geo.widget.text("Félicitations!"))
+		geo.ui.append(player_id, geo.widget.text("Félicitations! Vous avez validé un objectif!"))
 		geo.game.badge(player_id, event.via_id) -- gives badge to player
 		geo.ui.append(player_id, geo.widget.text("<<badge("..event.via_id..")>>")) -- show badge to player
 	end
-    
+	
     table.insert(myPlayers[player_id].found, event.via_id)
     geo.ui.clear(player_id)
     geo.game.badge(player_id, event.via_id) -- gives badge to player
