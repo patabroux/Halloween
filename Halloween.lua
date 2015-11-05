@@ -47,7 +47,7 @@ function ExtTable:insert(item)
 end
 
 function ExtTable:remove(pos)
-	table.remove(self.items, pos)
+	return table.remove(self.items, pos)
 end
 
 function ExtTable:find(field, value)
@@ -87,88 +87,83 @@ function Game:new (o)
 end
 
 function Game:addPlayer(player)
-	local function goThere(event)
-        local place = player.places:find("id", event.id)
-        player:clearUI()
-        geo.ui.append(player_id, geo.widget.text(
-            "En direction de " .. place.text
-        ))
-		geo.ui.append(player.id, geo.widget.text("{{"..place.image.."}}"))
-        geo.ui.append(player.id, geo.widget.compass{
-			target = { lat = place.location.lat, lon = place.location.lon };
-			radius = 300;
-			onInRange = function(event)
-				geo.ui.append(player.id, geo.widget.text(
-					"A proximité du lieu : "..place.text
-				))
-			end
-		})
-		geo.ui.append(player.id, geo.widget.button{
-			text = "Lieux";
-			onClick = function(event)
-				player:showMainScreen()
-			end
-		})
-		player:refreshScores()
-    end
-	
 	self.players:insert(player)
-	player.places = self.getPlaces()
+	player.places = self:getPlaces()
 	
-	for _,v in ipairs(player.places) do
-		v.onSelected = goThere
+	for _,v in ipairs(player.places.items) do
+		v.onSelected = function(event)
+			local place = player.places:find("id", event.id)
+			player:clearUI()
+			geo.ui.append(player.id, geo.widget.text(
+				"En direction de " .. place.text
+			))
+			geo.ui.append(player.id, geo.widget.text("{{"..place.image.."}}"))
+			geo.ui.append(player.id, geo.widget.compass{
+				target = { lat = place.location.lat, lon = place.location.lon };
+				radius = 300;
+				onInRange = function(event)
+					geo.ui.append(player.id, geo.widget.text(
+						"A proximité du lieu : "..place.text
+					))
+				end
+			})
+			geo.ui.append(player.id, geo.widget.button{
+				text = "Lieux";
+				onClick = function(event)
+					player:showMainScreen()
+				end
+			})
+			player:refreshScores()
+		end
 	end
 	
 	player.game = self
 end
 
-function Game.getPlaces(callback)
+function Game.getPlaces()
+	local url = 'http://companyb-ny.com/wp-content/uploads/2012/09/Secret-PR.png'
+
 	local places = ExtTable.create(
 		{ -- Liste des lieux
 			{
 			id = '51';
-			image = 'http://drive.google.com/uc?export=view&id=0BwZAY0N3lE7tRUhSV1d4VXJZYXM';
-			text = 'Bosquet 1';
-			location = { lat = 45.722428, lon = 4.823955 };
+			image = url;
+			text = 'Objectif 1';
+			location = { lat = 45.63884, lon = 5.57437 };
 			stuff = "blood wine";
 			stuff_image = "http://pataguilde.16mb.com/images/blood_wine.jpg";
-			onSelected = callback ;
 			},
 			{
 			id = '52';
-			image = 'http://drive.google.com/uc?export=view&id=0BwZAY0N3lE7tLXJ0VW1BMkJyLTQ';
-			text = 'Bosquet 2';
-			location = { lat = 45.722101, lon = 4.823341 };
+			image = url;
+			text = 'Objectif 2';
+			location = { lat = 45.6402, lon = 5.57591 };
 			stuff = "demon brew";
 			stuff_image = "http://pataguilde.16mb.com/images/demon_brew.jpg";
-			onSelected = callback;
 			},
 			{
 			id = '53';
-			image = 'http://drive.google.com/uc?export=view&id=0BwZAY0N3lE7tenRHcGJLWkVFajQ';
-			text = 'Bosquet 3';
-			location = { lat = 5.237222, lon = -52.760556 };
+			image = url;
+			text = 'Objectif 3';
+			location = { lat = 45.63986, lon = 5.57395 };
 			stuff = "spider blood";
 			stuff_image = "http://pataguilde.16mb.com/images/spider_blood.jpg";
-			onSelected = callback;
 			},
 			{
 			id = '54';
-			image = 'http://drive.google.com/uc?export=view&id=0BwZAY0N3lE7tMDA0dXc4MFRIMHc';
-			text = 'Bosquet A';
-			location = { lat = 45.722619, lon = 4.822654};
+			image = url;
+			text = 'Objectif 4';
+			location = { lat = 45.63846, lon = 5.57473};
 			stuff = "zombie virus";
 			stuff_image = "http://pataguilde.16mb.com/images/zombie_virus.jpg";
-			onSelected = callback;
 			},
 			{
 			id = '100';
-			image = 'http://pataguilde.16mb.com/images/graveyard.png';
-			text = 'Cimetière';
-			location = { lat = 0, lon = 0 };
+			image = url;
+			text = 'Objectif 5';
+			location = { lat = 45.64049, lon = 5.57371 };
 			stuff = "blood wine";
 			stuff_image = "http://pataguilde.16mb.com/images/graveyard.png";
-			onSelected = callback ;
 			}
 		}
 	)
@@ -295,9 +290,9 @@ function Player:showNotification(notification)
 end
 
 -- Affiche l'interface principale
-function Player:showMainScreen(players)
+function Player:showMainScreen()
 	self:clearUI()
-	self:refreshScores(players)
+	self:refreshScores()
 
 	geo.ui.append(self.id, geo.widget.places{
 		places = self.places.items
@@ -329,8 +324,10 @@ function GameMaster:refreshPositions()
 	local positions = self.game:getPlayerPositions()
 	
 	for _,v in ipairs(positions.items) do
-		local player = self.game.players:find("id", tonumber(v.id))
-		v.onSelected = self:showPlayer
+		v.onSelected = function(event)
+			local player = self.game.players:find("id", tonumber(event.id))
+			self:showPlayer(player)
+		end
 	end
 	
 	local widget = geo.widget.places{places = positions.items}
@@ -345,9 +342,9 @@ function GameMaster:refreshPositions()
 	self.widgets.positions = widget_id
 end
 
-function GameMaster:showMainScreen(players)
+function GameMaster:showMainScreen()
 	self:clearUI()
-	self:refreshPositions(players)
+	self:refreshPositions()
 end
 
 function GameMaster:showPlayer(player)
@@ -400,8 +397,6 @@ myGame = Game:new({id=GAME_ID}) -- Contexte du jeu
 geo.event.join(function(event)
     local player_id = event.player_id	
 	local player = Player:new({id=player_id, name=""})
-    myGame:addPlayer(player)
-    geo.feature.gps(player_id, true) -- activate GPS
 	geo.ui.append(player_id, geo.widget.text(
 			"Entrez votre nom"
 	))	
@@ -415,8 +410,8 @@ geo.event.join(function(event)
 			else
 				local player = Player:new({id=player_id, name=event.value})
 				myGame:addPlayer(player)
-				myGame.broadcastScores()
-				myGame.broadcastNotification(player.name.." a rejoint la partie.")
+				myGame:broadcastScores()
+				myGame:broadcastNotification(player.name.." a rejoint la partie.")
 				geo.ui.append(player_id, geo.widget.text(
 					"Bienvenue, " .. event.value
 				))
@@ -429,6 +424,7 @@ geo.event.join(function(event)
 			end
         end
     })
+	geo.feature.gps(player_id, true) -- activate GPS
 end)
 
 geo.event.qr_scan(function(event)
@@ -465,9 +461,12 @@ end)
 geo.event.location(function(event)
 	local player = myGame.players:find("id", event.player_id)
 	--geo.ui.append(event.player_id, geo.widget.text("Nouvelle position : "..event.pos.lat..","..event.pos.lon))
-	player.position.lat = event.pos.lat
-	player.position.lon = event.pos.lon
-	myGame:broadcastPositions()
+	
+	if player ~= nil then
+		player.position.lat = event.pos.lat
+		player.position.lon = event.pos.lon
+		myGame:broadcastPositions()
+	end
 end)
 -- global functions
 
